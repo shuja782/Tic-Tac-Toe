@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Tic-Tac-Toe</string>
+    <string name="Heading">Tic Tac Toe</string>
+    <string name="Developer">Developed by M Shuja Ali</string>
+    <string name="Grid">Grid</string>
+    <string name="shuja">shuja</string>
+    <string name="image">img</string>
+    <string name="win_status">Win Status</string>
+</resources>
