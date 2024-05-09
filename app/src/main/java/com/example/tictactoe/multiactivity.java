@@ -2,8 +2,11 @@ package com.example.tictactoe;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -39,13 +42,34 @@ public class multiactivity extends AppCompatActivity {
         playerOWinsTextView = findViewById(R.id.playerOWins);
     }
 
+    private void showGameOverDialog(String message) {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(false);
+        dialog.setContentView(R.layout.game_over_dialog);
+
+        TextView text = dialog.findViewById(R.id.gameOverText);
+        text.setText(message);
+
+        Button dialogButton = dialog.findViewById(R.id.continueButton);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                gameReset();
+            }
+        });
+
+        dialog.show();
+    }
+
     public void playerTap(View view) {
         ImageView img = (ImageView) view;
         int tappedImage = Integer.parseInt(img.getTag().toString());
 
         // Check if game is not already over
         if (!gameActive) {
-            gameReset(view);
+            gameReset();
         }
 
         // Check if tapped position is empty
@@ -72,16 +96,16 @@ public class multiactivity extends AppCompatActivity {
                     String winnerStr;
                     gameActive = false;
                     if (gameState[winPosition[0]] == 0) {
-                        winnerStr = "X has won";
+                        winnerStr = "Congratulations, X has won";
                         playerXWins++;
                         playerXWinsTextView.setText("X : " + playerXWins);
                     } else {
-                        winnerStr = "O has won";
+                        winnerStr = "Congratulations, O has won";
                         playerOWins++;
                         playerOWinsTextView.setText("O : " + playerOWins);
                     }
-                    status.setText(winnerStr);
-                    return; // Exit method to prevent further actions
+                    showGameOverDialog(winnerStr);
+                    return;
                 }
             }
 
@@ -94,29 +118,37 @@ public class multiactivity extends AppCompatActivity {
                 }
             }
             if (gameOver) {
-                status.setText("Game Tied");
+                showGameOverDialog("Game Tied");
                 gameActive = false;
             }
         }
     }
 
-    public void gameReset(View view) {
+    public void gameReset() {
         gameActive = true;
         activePlayer = 0;
-        for(int i=0; i<gameState.length; i++){
+        for (int i = 0; i < gameState.length; i++) {
             gameState[i] = 2;
+            ImageView img = findViewById(getImageViewIdByIndex(i));
+            if (img != null) {
+                img.setImageResource(0);
+            }
         }
-        ((ImageView)findViewById(R.id.imageView4)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView5)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView6)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView7)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView8)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView9)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView10)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView12)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView11)).setImageResource(0);
-
-        // Clear the status text to indicate the start of a new game
         status.setText("X's Turn - Tap to play");
+    }
+
+    private int getImageViewIdByIndex(int index) {
+        switch (index) {
+            case 0: return R.id.imageView10;
+            case 1: return R.id.imageView11;
+            case 2: return R.id.imageView12;
+            case 3: return R.id.imageView7;
+            case 4: return R.id.imageView8;
+            case 5: return R.id.imageView9;
+            case 6: return R.id.imageView6;
+            case 7: return R.id.imageView5;
+            case 8: return R.id.imageView4;
+            default: return -1;  // Invalid index
+        }
     }
 }

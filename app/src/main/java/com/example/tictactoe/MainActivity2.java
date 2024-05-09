@@ -2,8 +2,11 @@ package com.example.tictactoe;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import android.widget.TextView;
@@ -33,7 +36,7 @@ public class MainActivity2 extends AppCompatActivity {
 
     public void playerTap(View view) {
         if (!gameActive) {
-            gameReset(view);
+            gameReset();
             return;
         }
 
@@ -52,76 +55,87 @@ public class MainActivity2 extends AppCompatActivity {
             }
         }
     }
+    private void updateScores() {
+        playerXWinsTextView.setText("X : " + playerXWins);
+        playerOWinsTextView.setText("O : " + playerOWins);
+    }
+
 
     private void checkGameState() {
-        // Check for a win
         for (int[] winPosition : winPositions) {
-            if (gameState[winPosition[0]] != 2 &&
-                    gameState[winPosition[0]] == gameState[winPosition[1]] &&
-                    gameState[winPosition[1]] == gameState[winPosition[2]]) {
-                // A player has won
+            if (gameState[winPosition[0]] != 2 && gameState[winPosition[0]] == gameState[winPosition[1]] && gameState[winPosition[1]] == gameState[winPosition[2]]) {
                 gameActive = false;
                 if (gameState[winPosition[0]] == 0) {
-                    // Player X wins
-                    playerXWins++;
-                    playerXWinsTextView.setText("X : " + playerXWins);
-                    statusTextView.setText(" X wins");
+                    playerXWins++; // Increment score for Player X
                 } else {
-                    // Player O (or AI) wins
-                    playerOWins++;
-                    playerOWinsTextView.setText("AI : " + playerOWins);
-                    statusTextView.setText(" AI wins");
+                    playerOWins++; // Increment score for AI
                 }
+                String message = gameState[winPosition[0]] == 0 ? getString(R.string.congratulations) : getString(R.string.better_luck);
+                showGameOverDialog(message);
+                updateScores(); // Update scores on the UI
                 return;
             }
         }
 
-        // Check for a tie
+        // Check for a tie scenario
         boolean isTie = true;
         for (int state : gameState) {
             if (state == 2) {
-                // There are still empty cells, game is not a tie
                 isTie = false;
                 break;
             }
         }
         if (isTie) {
-            // Game is a tie, no player wins
             gameActive = false;
             statusTextView.setText("Game Tied");
+            showGameOverDialog("Game Tied");
         }
     }
 
 
 
-    private int minimax(int[] board, int depth, boolean isMaximizing) {
-        int score = evaluate(board);
 
-        if (score != 0 || depth == 9) {
-            return score;
+
+    private int minimax(int[] board, int depth, boolean isMaximizing) {
+        // First, we need to check if the game has already been won by someone (use a new function here)
+        int winner = checkWinner(board);
+        if (winner != 0 || depth == 9) {
+            return winner;
         }
 
         if (isMaximizing) {
             int bestScore = Integer.MIN_VALUE;
             for (int i = 0; i < board.length; i++) {
-                if (board[i] == 2) {
-                    board[i] = 1;
-                    bestScore = Math.max(bestScore, minimax(board, depth + 1, false));
-                    board[i] = 2; // Undo move
+                if (board[i] == 2) { // If the spot is empty
+                    board[i] = 1; // AI's move
+                    int score = minimax(board, depth + 1, false);
+                    board[i] = 2; // Undo the move
+                    bestScore = Math.max(score, bestScore);
                 }
             }
             return bestScore;
         } else {
             int bestScore = Integer.MAX_VALUE;
             for (int i = 0; i < board.length; i++) {
-                if (board[i] == 2) {
-                    board[i] = 0;
-                    bestScore = Math.min(bestScore, minimax(board, depth + 1, true));
-                    board[i] = 2; // Undo move
+                if (board[i] == 2) { // If the spot is empty
+                    board[i] = 0; // Player's move
+                    int score = minimax(board, depth + 1, true);
+                    board[i] = 2; // Undo the move
+                    bestScore = Math.min(score, bestScore);
                 }
             }
             return bestScore;
         }
+    }
+
+    private int checkWinner(int[] board) {
+        int[][] winConditions = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6}};
+        for (int[] winPos : winConditions) {
+            if (board[winPos[0]] != 2 && board[winPos[0]] == board[winPos[1]] && board[winPos[1]] == board[winPos[2]]) {
+                return board[winPos[0]] == 1 ? 10 : -10;
+            }
+        }
+        return 0;
     }
 
     private int evaluate(int[] board) {
@@ -151,10 +165,10 @@ public class MainActivity2 extends AppCompatActivity {
         int bestMove = -1;
 
         for (int i = 0; i < gameState.length; i++) {
-            if (gameState[i] == 2) {
+            if (gameState[i] == 2) { // Check if the spot is empty
                 gameState[i] = 1; // Assume AI's move
                 int score = minimax(gameState, 0, false);
-                gameState[i] = 2; // Undo move
+                gameState[i] = 2; // Undo the move
 
                 if (score > bestScore) {
                     bestScore = score;
@@ -164,12 +178,33 @@ public class MainActivity2 extends AppCompatActivity {
         }
 
         if (bestMove != -1) {
-            gameState[bestMove] = 1; // Make AI's move
+            gameState[bestMove] = 1; // Execute the best move
             updateCellUI(bestMove); // Update UI with AI's move
-            statusTextView.setText("AI's Turn"); // Update status text
+            statusTextView.setText("Player X's Turn");
             checkGameState(); // Check game state after AI's move
-            activePlayer = 0;
+            activePlayer = 0; // Switch turn back to player
         }
+    }
+
+    private void showGameOverDialog(String message) {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setCancelable(false);
+        dialog.setContentView(R.layout.game_over_dialog);
+
+        TextView text = (TextView) dialog.findViewById(R.id.gameOverText);
+        text.setText(message);
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.continueButton);
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                gameReset();
+            }
+        });
+
+        dialog.show();
     }
 
     private void updateCellUI(int position) {
@@ -214,24 +249,34 @@ public class MainActivity2 extends AppCompatActivity {
 
 
 
-    private void gameReset(View view) {
+    private void gameReset() {
         gameActive = true;
         activePlayer = 0;
-        for(int i=0; i<gameState.length; i++){
+        for (int i = 0; i < gameState.length; i++) {
             gameState[i] = 2;
+            ImageView img = findViewById(getImageViewIdByIndex(i));
+            if (img != null) {
+                img.setImageResource(0);  // Clear the ImageView
+            }
         }
-        ((ImageView)findViewById(R.id.imageView4)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView5)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView6)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView7)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView8)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView9)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView10)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView12)).setImageResource(0);
-        ((ImageView)findViewById(R.id.imageView11)).setImageResource(0);
-
-        // Clear the status text to indicate the start of a new game
         statusTextView.setText("X's Turn - Tap to play");
     }
+
+
+    private int getImageViewIdByIndex(int index) {
+        switch (index) {
+            case 0: return R.id.imageView10;
+            case 1: return R.id.imageView11;
+            case 2: return R.id.imageView12;
+            case 3: return R.id.imageView7;
+            case 4: return R.id.imageView8;
+            case 5: return R.id.imageView9;
+            case 6: return R.id.imageView6;
+            case 7: return R.id.imageView5;
+            case 8: return R.id.imageView4;
+            default: return -1;  // Invalid index
+        }
+    }
+
 }
 

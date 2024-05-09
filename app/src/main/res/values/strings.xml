@@ -6,4 +6,8 @@
     <string name="shuja">shuja</string>
     <string name="image">img</string>
     <string name="win_status">Win Status</string>
+    <string name="congratulations">Game Over, X has Won</string>
+    <string name="better_luck">Game Over, O has Won</string>
+    <string name="hello">Continue</string>
+
 </resources>

@@ -14,8 +14,7 @@ public class home extends AppCompatActivity {
 
         Button playButton = findViewById(R.id.button2);
         Button exitButton = findViewById(R.id.button4);
-        Button singlePlayerButton = findViewById(R.id.button); // Added
-        Button aboutButton = findViewById(R.id.button3); // Added
+        Button singlePlayerButton = findViewById(R.id.button);
 
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -32,7 +31,6 @@ public class home extends AppCompatActivity {
             }
         });
 
-        // Start MainActivity2 (multiactivity) when "Single Player" button is clicked
         singlePlayerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -41,13 +39,6 @@ public class home extends AppCompatActivity {
             }
         });
 
-        // Start AboutActivity when "About us" button is clicked
-        aboutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent aboutIntent = new Intent(home.this, about.class); // Change to your AboutActivity class name
-                startActivity(aboutIntent);
-            }
-        });
+        
     }
 }
